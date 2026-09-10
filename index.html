@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Color Wheel Selector</title>
+<style>
+    body {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        transition: background 0.5s;
+        font-family: Arial, sans-serif;
+    }
+
+    #wheelWrapper {
+        position: relative;
+        width: 350px;
+        height: 350px;
+    }
+
+    #wheel {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform: rotate(0deg);
+        transition: transform 0.3s ease-out;
+    }
+
+    /* bottom selector arrow */
+    #selector {
+        width: 0;
+        height: 0;
+        border-left: 20px solid transparent;
+        border-right: 20px solid transparent;
+        border-top: 30px solid black;
+        position: absolute;
+        bottom: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    /* color slices use conic-gradient */
+</style>
+</head>
+<body>
+
+<h2>#COLOR PICKER</h2>
+
+<div id="wheelWrapper">
+    <div id="wheel"></div>
+    <div id="selector"></div>
+</div>
+
+<script>
+/* 24 colors */
+const colors = [
+    "#FF0000", "#FF4000", "#FF8000", "#FFBF00",
+    "#FFFF00", "#BFFF00", "#80FF00", "#40FF00",
+    "#00FF00", "#00FF40", "#00FF80", "#00FFBF",
+    "#00FFFF", "#00BFFF", "#0080FF", "#0040FF",
+    "#0000FF", "#4000FF", "#8000FF", "#BF00FF",
+    "#FF00FF", "#FF00BF", "#FF0080", "#FF0040"
+];
+
+/* Generate conic gradient */
+let gradient = "conic-gradient(";
+let slice = 360 / 24;
+colors.forEach((c, i) => {
+    gradient += `${c} ${i * slice}deg ${(i + 1) * slice}deg, `;
+    console.log(c,i);
+});
+gradient = gradient.slice(0, -2) + ")";
+
+document.getElementById("wheel").style.background = gradient;
+
+let wheel = document.getElementById("wheel");
+let currentRotation = 0;
+let isDragging = false;
+let startAngle = 0;
+
+/* convert mouse angle */
+function getAngle(e) {
+    const rect = wheel.getBoundingClientRect();
+    const x = e.clientX - (rect.left + rect.width / 2);
+    const y = e.clientY - (rect.top + rect.height / 2);
+    return Math.atan2(y, x) * (180 / Math.PI);
+}
+
+/* mouse down */
+wheel.addEventListener("mousedown", e => {
+    isDragging = true;
+    startAngle = getAngle(e) - currentRotation;
+});
+
+/* mouse move rotate */
+document.addEventListener("mousemove", e => {
+    if (!isDragging) return;
+    let angle = getAngle(e);
+    currentRotation = angle - startAngle;
+    wheel.style.transform = `rotate(${currentRotation}deg)`;
+});
+
+/* mouse up */
+document.addEventListener("mouseup", () => {
+    isDragging = false;
+    updateBackground();
+});
+
+/* calculate selected color at bottom */
+function updateBackground() {
+    let sliceAngle = 360 / 24;
+    let fixedRotation = (360 - (currentRotation % 360)) % 360;
+    let index = Math.floor(fixedRotation / sliceAngle) % 24;
+    document.body.style.background = colors[index];
+}
+</script>
+
+</body>
+</html>
